@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webshop Elemzés — 2024 Q1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+  /* NAV */
+  nav { background: #1a1a2e; padding: 0 32px; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  nav .logo { color: #fff; font-weight: 700; font-size: 15px; padding: 14px 0; margin-right: 16px; }
+  nav a { color: #aab; text-decoration: none; font-size: 13px; padding: 14px 12px; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  nav a:hover, nav a.active { color: #fff; border-bottom-color: #e84393; }
+
+  /* SECTIONS */
+  .section { display: none; max-width: 1100px; margin: 32px auto; padding: 0 24px 48px; }
+  .section.active { display: block; }
+
+  /* BANNER */
+  .banner { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 28px 32px; margin-bottom: 28px; border-left: 6px solid #e84393; }
+  .banner .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #e84393; margin-bottom: 8px; }
+  .banner h1 { font-size: 22px; font-weight: 700; line-height: 1.35; }
+  .banner .sub { font-size: 13px; color: #aab; margin-top: 10px; }
+
+  .banner.warning { border-left-color: #f59e0b; }
+  .banner.warning .label { color: #f59e0b; }
+  .banner.info { border-left-color: #3b82f6; }
+  .banner.info .label { color: #3b82f6; }
+  .banner.ok { border-left-color: #10b981; }
+  .banner.ok .label { color: #10b981; }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .two-col.wide { grid-template-columns: 1.6fr 1fr; }
+  @media(max-width:720px){ .two-col, .two-col.wide { grid-template-columns: 1fr; } }
+
+  /* CARDS */
+  .card { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 14px; }
+
+  /* KPI ROW */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media(max-width:720px){ .kpi-row { grid-template-columns: repeat(2,1fr); } }
+  .kpi { background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .kpi .val { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+  .kpi .lbl { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .kpi .sub { font-size: 12px; color: #e84393; margin-top: 6px; font-weight: 600; }
+  .kpi.red .val { color: #ef4444; }
+  .kpi.green .val { color: #10b981; }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8f9fb; color: #555; font-weight: 600; text-align: left; padding: 9px 12px; border-bottom: 2px solid #e5e7eb; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f2f5; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  .neg { color: #ef4444; font-weight: 600; }
+  .pos { color: #10b981; font-weight: 600; }
+  .warn { color: #f59e0b; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.red { background: #fee2e2; color: #ef4444; }
+  .badge.green { background: #d1fae5; color: #10b981; }
+  .badge.yellow { background: #fef3c7; color: #d97706; }
+
+  /* INSIGHT CARD */
+  .insight { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid #e84393; }
+  .insight h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #e84393; margin-bottom: 8px; }
+  .insight p { font-size: 13px; line-height: 1.6; color: #444; }
+  .insight .action { margin-top: 12px; padding: 10px 14px; background: #fdf2f8; border-radius: 6px; font-size: 12px; color: #9d174d; }
+  .insight .confidence { margin-top: 8px; font-size: 11px; color: #888; }
+
+  /* SQL BLOCK */
+  .sql-block { background: #1a1a2e; border-radius: 8px; padding: 16px 20px; margin: 12px 0; font-family: 'Courier New', monospace; font-size: 12px; color: #a8d8ea; overflow-x: auto; }
+  .sql-kw { color: #f59e0b; }
+  .sql-fn { color: #10b981; }
+  .sql-str { color: #e84393; }
+  .sql-cm { color: #555; font-style: italic; }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; }
+
+  /* HEATMAP */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap { border-collapse: collapse; font-size: 12px; width: 100%; }
+  .heatmap th { padding: 8px 12px; background: #f8f9fb; color: #555; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  .heatmap td { padding: 8px 12px; text-align: center; font-weight: 600; font-size: 13px; }
+  .hm-0 { background: #fee2e2; color: #991b1b; }
+  .hm-1 { background: #fecaca; color: #b91c1c; }
+  .hm-2 { background: #fde68a; color: #92400e; }
+  .hm-3 { background: #d1fae5; color: #065f46; }
+  .hm-pos { background: #bbf7d0; color: #064e3b; }
+
+  /* FOOTER */
+  .footer { text-align: center; font-size: 11px; color: #aaa; padding: 32px; }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; }
+  .checklist li { padding: 8px 0; border-bottom: 1px solid #f0f2f5; font-size: 13px; display: flex; gap: 10px; }
+  .checklist li:last-child { border-bottom: none; }
+  .check-ok { color: #10b981; font-weight: 700; }
+  .check-warn { color: #f59e0b; font-weight: 700; }
+  .check-err { color: #ef4444; font-weight: 700; }
+
+  /* ACTIOIN LIST */
+  .action-list { list-style: none; counter-reset: ac; }
+  .action-list li { counter-increment: ac; padding: 12px 16px 12px 48px; position: relative; border-bottom: 1px solid #f0f2f5; font-size: 13px; line-height: 1.5; }
+  .action-list li::before { content: counter(ac); position: absolute; left: 12px; top: 12px; background: #e84393; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .action-list li:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">📊 Webshop EDA</div>
+  <a href="#" class="active" onclick="show('exec',this)">Executive Summary</a>
+  <a href="#" onclick="show('trend',this)">Napi átlagbevétel csökkenés</a>
+  <a href="#" onclick="show('channel',this)">Channel elemzés</a>
+  <a href="#" onclick="show('data',this)">Adatforrás</a>
+  <a href="#" onclick="show('quality',this)">Adatminőség</a>
+  <a href="#" onclick="show('queries',this)">SQL Queries</a>
+</nav>
+
+<!-- ============================================================ -->
+<!-- 1. EXECUTIVE SUMMARY -->
+<!-- ============================================================ -->
+<div class="section active" id="exec">
+
+  <div class="banner">
+    <div class="label">⚠ Issue Report — Azonnali intézkedés szükséges</div>
+    <h1>A februári termékportfólió-váltás HUF 831k árbevétel-kiesést okozott — operatív probléma valószínűsíthető</h1>
+    <div class="sub">Elemzési időszak: 2024-01-05 — 2024-02-19 &nbsp;|&nbsp; Adatbázis: webshop.db &nbsp;|&nbsp; 50 rendelés, 45 ügyfél</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi red">
+      <div class="val">-56%</div>
+      <div class="lbl">Árbevétel visszaesés</div>
+      <div class="sub">Jan: 1 484 → Feb: 652</div>
+    </div>
+    <div class="kpi red">
+      <div class="val">-38%</div>
+      <div class="lbl">Napi átlag csökkenés</div>
+      <div class="sub">Időszak hosszával korrigálva</div>
+    </div>
+    <div class="kpi red">
+      <div class="val">26</div>
+      <div class="lbl">Eltűnt termék</div>
+      <div class="sub">Januárban aktív, februárban 0 db</div>
+    </div>
+    <div class="kpi red">
+      <div class="val">7.9%</div>
+      <div class="lbl">Marketplace-Clothing veszteség</div>
+      <div class="sub">HUF 169.78k, 3/4 visszáru</div>
+    </div>
+  </div>
+
+  <div class="two-col wide">
+    <div class="card">
+      <h3>Havi árbevétel — Jan vs Feb (channel-category bontás)</h3>
+      <div class="heatmap-wrap">
+        <table class="heatmap">
+          <thead>
+            <tr>
+              <th>Channel | Category</th>
+              <th>2024-01</th>
+              <th>2024-02</th>
+              <th>Variance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>partner | Clothing</td><td>263.98</td><td>40.46</td><td class="hm-0">-223.52</td></tr>
+            <tr><td>web | Electronics</td><td>219.59</td><td>18.98</td><td class="hm-0">-200.61</td></tr>
+            <tr><td>web | Home & Garden</td><td>197.15</td><td>75.68</td><td class="hm-1">-121.47</td></tr>
+            <tr><td>marketplace | Electronics</td><td>184.48</td><td>82.77</td><td class="hm-1">-101.71</td></tr>
+            <tr><td>partner | Electronics</td><td>171.22</td><td>69.58</td><td class="hm-1">-101.64</td></tr>
+            <tr><td>marketplace | Home & Garden</td><td>127.80</td><td>53.00</td><td class="hm-2">-74.80</td></tr>
+            <tr><td>web | Clothing</td><td>239.97</td><td>197.78</td><td class="hm-2">-42.19</td></tr>
+            <tr><td>partner | Home & Garden</td><td>80.20</td><td>72.20</td><td class="hm-3">-8.00</td></tr>
+            <tr><td>marketplace | Clothing</td><td>0.00</td><td>42.00</td><td class="hm-pos">+42.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="insight">
+        <h4>Árbevételkiesés februárban — HUF 831k</h4>
+        <p>A februári árbevétel HUF 831k-val csökkent 1 484-ről 652-re januárhoz képest. A napi átlagbevétel 38%-kal alacsonyabb a januári szintnél. Minden channel és termékkategória érintett a visszaesésben, operatív okokat valószínűsítünk.</p>
+        <p style="margin-top:8px">A legjelentősebben a termékportfólió változás jellemzi a helyzetet. A januárban jól teljesítő termékek jelentős része nem generált semmilyen árbevételt februárban. <strong>26 db eltűnt terméket</strong> azonosítottunk.</p>
+      </div>
+      <div class="insight">
+        <h4>Valószínű ok</h4>
+        <p>Operatív probléma: készlethiány, beszerzési lánc megszakadás, vagy rendszerszintű hiba. A globalitás erre utal.</p>
+        <div class="confidence">⚠ Hipotézis — igazoláshoz operatív adatok szükségesek</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Azonnali intézkedési terv</h3>
+    <ul class="action-list">
+      <li><strong>Értékesítési és beszerzési osztály:</strong> mi okozta a 26 db termék eltűnését februárban? Készlethiány, szerződés megszűnés, vagy rendszerhiba?</li>
+      <li><strong>Marketplace-Clothing kivizsgálása:</strong> 4 rendelésből 3 visszaküldött, HUF 169.78k elveszett revenue (teljes nettó revenue 7.9%-a). Az ok ismeretlen — területi vezető bevonása szükséges.</li>
+      <li><strong>Management értesítés folyamata:</strong> miért nem kapott a vezetőség hamarabb jelzést ekkora visszaesésről? Riasztási küszöb és monitoring bevezetése javasolt.</li>
+      <li><strong>Február teljes hónap adata:</strong> az elemzés február 19-ig tart — a teljes hónap képe szükséges a döntéshozatalhoz.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. ADATFORRÁS -->
+<!-- ============================================================ -->
+<div class="section" id="trend">
+
+  <div class="banner">
+    <div class="label">Havi árbevétel csökkenés — kritikus megállapítás</div>
+    <h1>Februárban 26 termék tűnt el a portfólióból — helyettük nem jelent meg új bevételi forrás</h1>
+    <div class="sub">Napi átlag visszaesés: -38% (időszak hosszával korrigálva) &nbsp;|&nbsp; Érintett: minden channel, minden category</div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>NAPI ÁTLAGBEVÉTEL CSÖKKENÉS</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:20px">
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Napi átlagbevétel (HUF) — január vs február</p>
+        <canvas id="trendChart"></canvas>
+      </div>
+      <div>
+        <div class="insight" style="margin-bottom:16px">
+          <h4>Napi átlagbevétel csökkenés</h4>
+          <p>Február hónapra 19 nap adata alapján a napi átlagbevétel HUF 34.34k, ami 38%-kal alacsonyabb a januári napi átlagbevételnél (HUF 54.98k). A napi átlag visszaesése valós teljesítménycsökkenésre utal.</p>
+        </div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Havi összesítő</p>
+        <table>
+          <thead><tr><th>Hónap</th><th>Aktív napok</th><th>Orders</th><th>Nettó rev.</th><th>Napi átlag</th></tr></thead>
+          <tbody>
+            <tr><td><strong>2024-01</strong></td><td>27</td><td>31</td><td>1 484.39</td><td>54.98</td></tr>
+            <tr><td><strong>2024-02</strong></td><td>19</td><td>19</td><td>652.45</td><td class="neg">34.34</td></tr>
+            <tr style="background:#fef2f2"><td><strong>Variance</strong></td><td>—</td><td class="neg">-12</td><td class="neg">-831.94</td><td class="neg">-20.64 (-38%)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Category szintű napi átlagbevétel csökkenés</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:20px">
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Napi átlagbevétel (HUF) — január vs február</p>
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div>
+        <div class="insight" style="margin-bottom:16px">
+          <h4>A visszaesés mindegyik termékkategóriát érinti</h4>
+          <p>Minden termékkategória napi átlagbevétele csökkent februárban. A visszaesés nem egyetlen termékkategória miatt történt — globális problémáról van szó.</p>
+        </div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Category napi átlagbevétel (HUF)</p>
+        <table>
+          <thead><tr><th>Category</th><th>Jan</th><th>Feb</th><th>Variance</th></tr></thead>
+          <tbody>
+            <tr><td>Electronics</td><td>21.31</td><td>9.02</td><td class="neg">-12.29</td></tr>
+            <tr><td>Clothing</td><td>18.66</td><td>14.75</td><td class="neg">-3.91</td></tr>
+            <tr><td>Home &amp; Garden</td><td>15.01</td><td>10.57</td><td class="neg">-4.44</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Kieső termékek</h3>
+    <p style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.6">26 olyan terméket azonosítottunk amelyek januárban HUF 1.170k bevételt hoztak, azonban februárban ez a bevételi forrás kiesett. Az okot nem ismerjük, az operatív osztály bevonását kérjük az okok feltárására.</p>
+    <table style="font-size:12px">
+      <thead><tr><th>Termék</th><th style="text-align:right">Jan bevétel (HUFk)</th><th style="text-align:right">Feb bevétel (HUFk)</th></tr></thead>
+      <tbody>
+            <tr><td>Winter Jacket</td><td style="text-align:right;color:#ef4444;font-weight:bold">119.99</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Running Shoes</td><td style="text-align:right;color:#ef4444;font-weight:bold">108.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Webcam</td><td style="text-align:right;color:#ef4444;font-weight:bold">104.50</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Hoodie</td><td style="text-align:right;color:#ef4444;font-weight:bold">89.98</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Power Bank</td><td style="text-align:right;color:#ef4444;font-weight:bold">79.98</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Wireless Mouse</td><td style="text-align:right;color:#ef4444;font-weight:bold">72.77</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Keyboard</td><td style="text-align:right;color:#ef4444;font-weight:bold">67.50</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Scarf</td><td style="text-align:right;color:#ef4444;font-weight:bold">66.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Jeans</td><td style="text-align:right;color:#ef4444;font-weight:bold">65.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>USB Cable</td><td style="text-align:right;color:#ef4444;font-weight:bold">59.90</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Throw Pillow</td><td style="text-align:right;color:#ef4444;font-weight:bold">56.97</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Candle Set</td><td style="text-align:right;color:#ef4444;font-weight:bold">54.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Flower Vase</td><td style="text-align:right;color:#ef4444;font-weight:bold">53.20</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>USB Hub</td><td style="text-align:right;color:#ef4444;font-weight:bold">52.73</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Photo Frame</td><td style="text-align:right;color:#ef4444;font-weight:bold">52.20</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Earbuds</td><td style="text-align:right;color:#ef4444;font-weight:bold">50.99</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Plant Pot</td><td style="text-align:right;color:#ef4444;font-weight:bold">48.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Desk Lamp</td><td style="text-align:right;color:#ef4444;font-weight:bold">45.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>HDMI Cable</td><td style="text-align:right;color:#ef4444;font-weight:bold">44.95</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Door Mat</td><td style="text-align:right;color:#ef4444;font-weight:bold">39.98</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Polo Shirt</td><td style="text-align:right;color:#ef4444;font-weight:bold">34.99</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Kitchen Scale</td><td style="text-align:right;color:#ef4444;font-weight:bold">28.80</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Soap Dispenser</td><td style="text-align:right;color:#ef4444;font-weight:bold">27.00</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Mouse Pad</td><td style="text-align:right;color:#ef4444;font-weight:bold">25.98</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>T-Shirt</td><td style="text-align:right;color:#ef4444;font-weight:bold">19.99</td><td style="text-align:right;color:#888">—</td></tr>
+            <tr><td>Phone Case</td><td style="text-align:right;color:#ef4444;font-weight:bold">15.99</td><td style="text-align:right;color:#888">—</td></tr>
+        <tr style="background:#f5f5f5"><td style="color:#ef4444;font-weight:bold">Összesen (26 termék)</td><td style="text-align:right;color:#ef4444;font-weight:bold">1 169.78</td><td style="text-align:right;color:#888">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Február: Újonnan    </table>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Február: Újonnan megjelenő termékek</h3>
+    <p style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.6">Február hónapban a kieső termékek miatti árbevétel csökkenést részben ellensúlyozta néhány új termék megjelenése. Ennek mértéke azonban nem éri el a kiesés mértékét. Az előző ponttal együtt vizsgálnunk kell, hogy mi okozta a sikertelen termékváltást.</p>
+    <table style="font-size:12px">
+      <thead><tr><th>Termék</th><th style="text-align:right">Jan bevétel (HUFk)</th><th style="text-align:right">Feb bevétel (HUFk)</th></tr></thead>
+      <tbody>
+        <tr><td>Bath Towel Set</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">72.20</td></tr>
+        <tr><td>Leggings</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">59.98</td></tr>
+        <tr><td>Cardigan</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">57.80</td></tr>
+        <tr><td>Dress Shirt</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">55.00</td></tr>
+        <tr><td>Monitor Riser</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">45.60</td></tr>
+        <tr><td>Charger</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">44.97</td></tr>
+        <tr><td>Beanie</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">42.00</td></tr>
+        <tr><td>Wool Socks</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">40.46</td></tr>
+        <tr><td>Laptop Stand</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">37.80</td></tr>
+        <tr><td>Cutting Board</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">35.98</td></tr>
+        <tr><td>Laundry Basket</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">27.00</td></tr>
+        <tr><td>Picture Hook Set</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">26.00</td></tr>
+        <tr><td>Belt</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">25.00</td></tr>
+        <tr><td>Table Runner</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">24.50</td></tr>
+        <tr><td>Cable Organizer</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">23.98</td></tr>
+        <tr><td>Screen Protector</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">18.98</td></tr>
+        <tr><td>Coasters Set</td><td style="text-align:right;color:#888">—</td><td style="text-align:right" class="pos">15.20</td></tr>
+        <tr style="background:#f5f5f5"><td style="color:#10b981;font-weight:bold">Összesen (17 termék)</td><td style="text-align:right;color:#888">—</td><td style="text-align:right;color:#10b981;font-weight:bold">652.45</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Korlátok    </table>
+  </div>
+
+  <div class="card">
+    <h3>Korlátok és fenntartások</h3>
+    <ul class="checklist">
+      <li><span class="check-warn">⚠</span><div><strong>50 sor:</strong> statisztikailag nem reprezentatív — a módszer a fontos, a számokat ne általánosítsd</div></li>
+      <li><span class="check-warn">⚠</span><div><strong>2 hónap:</strong> nem elégséges trendmegállapításhoz — szezonalitást nem lehet kizárni</div></li>
+      <li><span class="check-warn">⚠</span><div><strong>Február csonka:</strong> adatok február 19-ig állnak rendelkezésre — hiányzik a teljes hónap képe, különösen a napi átlagbevétel felülvizsgálandó</div></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. ADATMINŐSÉG -->
+<!-- ============================================================ -->
+<div class="section" id="channel">
+
+  <div class="banner warning">
+    <div class="label">Channel elemzés</div>
+    <h1>A marketplace return rate 3× magasabb a web channel-nél — a Clothing kategória az elsődleges ok</h1>
+    <div class="sub">Nettó revenue alapján: web vezet, partner AOV a legmagasabb, marketplace legsúlyosabb visszáruzással</div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Nettó revenue és return rate — channel-enként</h3>
+      <canvas id="channelChart" height="200"></canvas>
+    </div>
+    <div class="card">
+      <h3>Channel teljesítmény összehasonlítás</h3>
+      <table>
+        <thead><tr><th>Channel</th><th>Orders</th><th>Return rate</th><th>Nettó rev.</th><th>AOV</th><th>Avg. disc.</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>web</strong></td><td>23</td>
+            <td><span class="badge green">4.3%</span></td>
+            <td class="pos">949.15</td><td>43.14</td><td>3.3%</td>
+          </tr>
+          <tr>
+            <td><strong>partner</strong></td><td>13</td>
+            <td><span class="badge yellow">7.7%</span></td>
+            <td>697.64</td><td class="pos">58.14</td><td>7.3%</td>
+          </tr>
+          <tr>
+            <td><strong>marketplace</strong></td><td>14</td>
+            <td><span class="badge red">28.6%</span></td>
+            <td class="neg">490.05</td><td>49.01</td><td>5.7%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="insight">
+      <h4>Marketplace-Clothing anomália — 7.9% revenue veszteség</h4>
+      <p>4 marketplace-Clothing rendelésből 3 visszaküldött. Az elveszett revenue <strong>169.78 egység</strong> — a teljes nettó revenue <strong>7.9%-a</strong> egyetlen channel-category kombinációból.</p>
+      <div class="action">⚡ Akció: területi vezető bevonása. Az ok ismeretlen — rendeléskori hiba, méretezési probléma vagy minőségi hiba valószínűsíthető.</div>
+      <div class="confidence">⚠ Bizonyosság: magas a számon, közepes az okon</div>
+    </div>
+    <div class="card">
+      <h3>Marketplace-Clothing részletei</h3>
+      <table>
+        <thead><tr><th>Termék</th><th>Qty</th><th>Ár</th><th>Discount</th><th>Returned</th><th>Revenue</th></tr></thead>
+        <tbody>
+          <tr><td>Sneakers</td><td>1</td><td>95.00</td><td>15%</td><td><span class="badge red">yes</span></td><td class="neg">80.75</td></tr>
+          <tr><td>Baseball Cap</td><td>3</td><td>16.50</td><td>5%</td><td><span class="badge red">yes</span></td><td class="neg">47.03</td></tr>
+          <tr><td>Beanie</td><td>3</td><td>14.00</td><td>0%</td><td><span class="badge green">no</span></td><td class="pos">42.00</td></tr>
+          <tr><td>Gloves</td><td>2</td><td>21.00</td><td>0%</td><td><span class="badge red">yes</span></td><td class="neg">42.00</td></tr>
+        </tbody>
+      </table>
+      <div class="sql-block" style="margin-top:12px">
+<span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">WHERE</span> channel = <span class="sql-str">'marketplace'</span><br>
+<span class="sql-kw">AND</span> category = <span class="sql-str">'Clothing'</span>;
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. CHANNEL ELEMZÉS -->
+<!-- ============================================================ -->
+<div class="section" id="data">
+
+  <div class="banner info">
+    <div class="label">Adatforrás</div>
+    <h1>Az elemzés két táblán alapul: 50 rendelés, 45 ügyfél — LEFT JOIN-nal összekapcsolva</h1>
+    <div class="sub">Adatbázis: webshop.db (SQLite) &nbsp;|&nbsp; Eszköz: DBeaver Community</div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>orders tábla — első 5 sor</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>order_id</th><th>customer_id</th><th>date</th><th>channel</th><th>category</th><th>product</th><th>qty</th><th>price</th><th>disc.</th><th>returned</th><th>revenue</th></tr></thead>
+        <tbody>
+          <tr><td>1001</td><td>C001</td><td>2024-01-05</td><td>web</td><td>Electronics</td><td>Wireless Mouse</td><td>2</td><td>25.99</td><td>10%</td><td><span class="badge green">no</span></td><td>46.78</td></tr>
+          <tr><td>1002</td><td>C002</td><td>2024-01-06</td><td>marketplace</td><td>Home & Garden</td><td>Desk Lamp</td><td>1</td><td>45.00</td><td>0%</td><td><span class="badge green">no</span></td><td>45.00</td></tr>
+          <tr><td>1003</td><td>C003</td><td>2024-01-06</td><td>partner</td><td>Electronics</td><td>USB Hub</td><td>3</td><td>18.50</td><td>5%</td><td><span class="badge green">no</span></td><td>52.73</td></tr>
+          <tr><td>1004</td><td>C004</td><td>2024-01-07</td><td>web</td><td>Clothing</td><td>T-Shirt</td><td>1</td><td>19.99</td><td>0%</td><td><span class="badge green">no</span></td><td>19.99</td></tr>
+          <tr><td>1005</td><td>C005</td><td>2024-01-08</td><td>marketplace</td><td>Electronics</td><td>BT Speaker</td><td>1</td><td>89.99</td><td>15%</td><td><span class="badge red">yes</span></td><td>76.49</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:10px;">13 oszlop: order_id (PK), customer_id (FK), order_date, channel, category, product_name, quantity, unit_price, discount, is_returned, payment_method, revenue, dq_flag</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>customers tábla — első 5 sor</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>customer_id</th><th>name</th><th>city</th><th>signup</th><th>segment</th></tr></thead>
+        <tbody>
+          <tr><td>C001</td><td>Kovács Anna</td><td>Budapest</td><td>2023-03-15</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C002</td><td>Nagy Péter</td><td>Debrecen</td><td>2023-05-20</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C003</td><td>Szabó Kata</td><td>Szeged</td><td>2023-07-01</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C004</td><td>Tóth László</td><td>Budapest</td><td>2023-08-10</td><td><span class="badge yellow">new</span></td></tr>
+          <tr><td>C005</td><td>Varga Eszter</td><td>Pécs</td><td>2023-09-22</td><td><span class="badge yellow">new</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:10px;">5 oszlop: customer_id (PK), customer_name, city, signup_date, segment (new/returning)</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Táblakapcsolat és JOIN döntés</h3>
+    <div class="two-col">
+      <div>
+        <table>
+          <thead><tr><th>Teszt</th><th>Eredmény</th><th>Következtetés</th></tr></thead>
+          <tbody>
+            <tr><td>orders COUNT</td><td>50</td><td>Kiindulópont</td></tr>
+            <tr><td>LEFT JOIN COUNT</td><td>50</td><td class="pos">Nincs sorvesztés ✓</td></tr>
+            <tr><td>INNER JOIN COUNT</td><td class="warn">48</td><td class="neg">2 orphan kiesik!</td></tr>
+            <tr><td>Orphan sorok</td><td>order 1015, 1045</td><td>C999 + NULL customer_id</td></tr>
+            <tr><td>Customer rendelés nélkül</td><td>0</td><td class="pos">Minden customer aktív ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="insight">
+        <h4>Döntés: LEFT JOIN</h4>
+        <p>Az orphan sorok revenue-ja az árbevétel része, még ha az ügyfél nem azonosítható is. A szegmens NULL értékét <code>COALESCE(segment, 'UNKNOWN')</code> kezeli.</p>
+        <div class="confidence">Az INNER JOIN 2 rendelés revenue-ját veszítette volna el észrevétlenül.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Az elemzésben használt SQL</h3>
+    <div class="sql-block">
+<span class="sql-cm">-- Feltáró lekérdezés: táblaméret</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_count <span class="sql-kw">FROM</span> orders;<br>
+<br>
+<span class="sql-cm">-- Orphan check: LEFT vs INNER JOIN</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">FROM</span> orders o<br>
+<span class="sql-kw">LEFT JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id;<br>
+<span class="sql-cm">-- Várt: 50 (LEFT) vs 48 (INNER)</span>
+    </div>
+    <p style="font-size:12px;color:#888;margin-top:8px;">A teljes query lista a <strong>webshop_queries.sql</strong> fájlban található.</p>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 5. HAVI TREND -->
+<!-- ============================================================ -->
+<div class="section" id="quality">
+
+  <div class="banner ok">
+    <div class="label">Adatminőség</div>
+    <h1>3 tudatos döntés született az elemzés előtt — ezek befolyásolják az összes KPI-t</h1>
+    <div class="sub">Revenue képlet: quantity × unit_price × (1 − discount) &nbsp;|&nbsp; Alap KPI: nettó revenue (returned kizárva)</div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Adatminőségi ellenőrzések</h3>
+      <ul class="checklist">
+        <li><span class="check-ok">✓</span> <div><strong>dq_flag:</strong> 48 NULL (rendben), 1 missing_customer, 1 orphan — jelölve, elemzésben marad</div></li>
+        <li><span class="check-ok">✓</span> <div><strong>Revenue képlet:</strong> quantity × unit_price × (1−discount) — csak kerekítési eltérés, oszlop megbízható</div></li>
+        <li><span class="check-ok">✓</span> <div><strong>Signup vs order dátum:</strong> nincs olyan rendelés ami regisztráció előtt történt</div></li>
+        <li><span class="check-warn">⚠</span> <div><strong>is_returned:</strong> 6 visszaküldött rendelés — revenue-juk beleszámít a bruttóba, de a nettóból kizárjuk</div></li>
+        <li><span class="check-warn">⚠</span> <div><strong>2 orphan sor:</strong> order 1015 (C999) és 1045 (NULL) — nem azonosítható ügyfél, UNKNOWN szegmensként kezeljük</div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>KPI definíciók</h3>
+      <table>
+        <thead><tr><th>KPI</th><th>Számítás</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nettó revenue</strong></td><td>SUM(revenue) WHERE is_returned = 'no'</td></tr>
+          <tr><td><strong>AOV</strong></td><td>AVG(revenue) WHERE is_returned = 'no'</td></tr>
+          <tr><td><strong>Return rate</strong></td><td>returned_db / összes_db × 100.0</td></tr>
+          <tr><td><strong>Súlyozott átlagár</strong></td><td>netto_revenue / teljesult_quantity</td></tr>
+          <tr><td><strong>Átlag discount</strong></td><td>AVG(discount) — minden sorra</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Bruttó vs Nettó revenue — is_returned hatása</h3>
+    <div class="two-col">
+      <div>
+        <table>
+          <thead><tr><th>Státusz</th><th>Rendelések</th><th>Revenue</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge green">Teljesített</span></td><td>44</td><td class="pos">2 136.84</td></tr>
+            <tr><td><span class="badge red">Visszaküldött</span></td><td>6</td><td class="neg">− 370.59</td></tr>
+            <tr><td><strong>Bruttó összesen</strong></td><td>50</td><td><strong>2 507.43</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="insight">
+        <h4>Döntés: nettó revenue az alap KPI</h4>
+        <p>A visszáru revenue nem realizált bevétel. Az összes elemzési mutató a nettó (returned kizárt) értékeket használja, kivéve ahol külön jelöljük.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 6. SQL QUERIES -->
+<!-- ============================================================ -->
+<div class="section" id="queries">
+
+  <div class="banner info">
+    <div class="label">SQL Queries — Teljes lekérdezési napló</div>
+    <h1>Az elemzés során futtatott összes SQL lekérdezés és eredményük</h1>
+    <div class="sub">Adatbázis: webshop.db (SQLite) &nbsp;|&nbsp; 26 lekérdezés &nbsp;|&nbsp; Eszköz: DBeaver Community</div>
+  </div>
+
+  <p class="section-title">1. Adatstruktúra feltárás</p>
+
+  <!-- Q01 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 01 — Orders tábla: első 5 sor</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Az első lekérdezéssel a rendelések tábla struktúráját és az adatok típusát vizsgáljuk: milyen oszlopok vannak, milyen értékek szerepelnek, milyen formátumban tárolódik a dátum, a discount és az is_returned mező.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> orders <span class="sql-kw">LIMIT</span> 5;
+    </div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table>
+        <thead><tr><th>order_id</th><th>customer_id</th><th>order_date</th><th>channel</th><th>category</th><th>product_name</th><th>quantity</th><th>unit_price</th><th>discount</th><th>is_returned</th><th>payment_method</th><th>revenue</th><th>dq_flag</th></tr></thead>
+        <tbody>
+          <tr><td>1001</td><td>C001</td><td>2024-01-05</td><td>web</td><td>Electronics</td><td>Wireless Mouse</td><td>2</td><td>25.99</td><td>0.1</td><td><span class="badge green">no</span></td><td>credit_card</td><td>46.78</td><td></td></tr>
+          <tr><td>1002</td><td>C002</td><td>2024-01-06</td><td>marketplace</td><td>Home &amp; Garden</td><td>Desk Lamp</td><td>1</td><td>45.0</td><td>0.0</td><td><span class="badge green">no</span></td><td>paypal</td><td>45.0</td><td></td></tr>
+          <tr><td>1003</td><td>C003</td><td>2024-01-06</td><td>partner</td><td>Electronics</td><td>USB Hub</td><td>3</td><td>18.5</td><td>0.05</td><td><span class="badge green">no</span></td><td>credit_card</td><td>52.73</td><td></td></tr>
+          <tr><td>1004</td><td>C004</td><td>2024-01-07</td><td>web</td><td>Clothing</td><td>T-Shirt</td><td>1</td><td>19.99</td><td>0.0</td><td><span class="badge green">no</span></td><td>bank_transfer</td><td>19.99</td><td></td></tr>
+          <tr><td>1005</td><td>C005</td><td>2024-01-08</td><td>marketplace</td><td>Electronics</td><td>BT Speaker</td><td>1</td><td>89.99</td><td>0.15</td><td><span class="badge red">yes</span></td><td>credit_card</td><td>76.49</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Q02 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 02 — Customers tábla: első 5 sor</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Az ügyfelek tábla struktúráját vizsgáljuk: az azonosítók formátuma (C001…), az elérhetőség, a signup_date típusa, és a szegmens lehetséges értékei (new / returning).</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> customers <span class="sql-kw">LIMIT</span> 5;
+    </div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table>
+        <thead><tr><th>customer_id</th><th>customer_name</th><th>city</th><th>signup_date</th><th>segment</th></tr></thead>
+        <tbody>
+          <tr><td>C001</td><td>Kovács Anna</td><td>Budapest</td><td>2023-03-15</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C002</td><td>Nagy Péter</td><td>Debrecen</td><td>2023-05-20</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C003</td><td>Szabó Kata</td><td>Szeged</td><td>2023-07-01</td><td><span class="badge green">returning</span></td></tr>
+          <tr><td>C004</td><td>Tóth László</td><td>Budapest</td><td>2023-08-10</td><td><span class="badge yellow">new</span></td></tr>
+          <tr><td>C005</td><td>Varga Eszter</td><td>Pécs</td><td>2023-09-22</td><td><span class="badge yellow">new</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="section-title">2. Adatminőség ellenőrzések</p>
+
+  <!-- Q03 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 03 — DQ flag megoszlás</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A dq_flag oszlop az adatminőségi jelölőket tartalmazza. Ezzel ellenőrizzük, hány sor problémás és milyen típusú problémáról van szó — ez alapozza meg a JOIN stratégia döntését.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> dq_flag, <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> count<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> dq_flag;
+    </div>
+    <table style="margin-top:12px;max-width:320px">
+      <thead><tr><th>dq_flag</th><th>count</th></tr></thead>
+      <tbody>
+        <tr><td><em style="color:#aaa">(NULL)</em></td><td>48</td></tr>
+        <tr><td><span class="badge yellow">missing_customer</span></td><td>1</td></tr>
+        <tr><td><span class="badge red">orphan</span></td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q04 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 04 — Revenue képlet ellenőrzés</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Ellenőrizzük, hogy a revenue oszlop értékei egyeznek-e a quantity × unit_price × (1 − discount) képlettel. Ha van eltérés, az adatrögzítési hibára utalhat. Csak azokat a sorokat listázzuk, ahol az eltérés nem nulla.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> order_id, quantity, unit_price, discount, revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(quantity * unit_price * (1 - discount), 2) <span class="sql-kw">AS</span> szamitott,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(revenue - quantity * unit_price * (1 - discount), 2) <span class="sql-kw">AS</span> elteres<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">WHERE</span> <span class="sql-fn">ROUND</span>(revenue - quantity * unit_price * (1 - discount), 2) != 0.00<br>
+<span class="sql-kw">LIMIT</span> 10;
+    </div>
+    <table style="margin-top:12px">
+      <thead><tr><th>order_id</th><th>quantity</th><th>unit_price</th><th>discount</th><th>revenue</th><th>szamitott</th><th>elteres</th></tr></thead>
+      <tbody>
+        <tr><td>1003</td><td>3</td><td>18.5</td><td>0.05</td><td>52.73</td><td>52.72</td><td class="warn">0.01</td></tr>
+        <tr><td>1029</td><td>3</td><td>16.5</td><td>0.05</td><td>47.03</td><td>47.02</td><td class="warn">0.01</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#888;margin-top:8px;">Csak kerekítési eltérés (0.01) — a revenue oszlop megbízható, az eltérés szignifikáns adathibára nem utal.</p>
+  </div>
+
+  <!-- Q05 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 05 — Visszaküldött rendelések revenue hatása</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Az is_returned mező alapján elválasztjuk a teljesített és visszaküldött rendeléseket. Ez határozza meg, hogy bruttó vagy nettó revenue-t számolunk — ez az összes további KPI alapja.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> is_returned, <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> db, <span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(revenue), 2) <span class="sql-kw">AS</span> total_revenue<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> is_returned;
+    </div>
+    <table style="margin-top:12px;max-width:360px">
+      <thead><tr><th>is_returned</th><th>db</th><th>total_revenue</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge green">no</span></td><td>44</td><td class="pos">2 136.84</td></tr>
+        <tr><td><span class="badge red">yes</span></td><td>6</td><td class="neg">330.77</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q06 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 06 — Signup dátum ellenőrzés</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Ellenőrizzük, hogy van-e olyan rendelés, amelynek dátuma korábbi az ügyfél regisztrációs dátumánál. Ez adatrögzítési hibára vagy tesztadatra utalna.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> o.order_id, o.customer_id, o.order_date, c.signup_date<br>
+<span class="sql-kw">FROM</span> orders o<br>
+<span class="sql-kw">LEFT JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id<br>
+<span class="sql-kw">WHERE</span> o.order_date &lt; c.signup_date;
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:#10b981;font-weight:600">✓ Eredmény: 0 sor — nincs olyan rendelés, amely regisztráció előtt történt.</p>
+  </div>
+
+  <p class="section-title">3. Kapcsolatok és Orphan check</p>
+
+  <!-- Q07-Q09 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 07–09 — Táblaméret és JOIN count összehasonlítás</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A három lekérdezés együtt dönti el, hogy LEFT JOIN-t vagy INNER JOIN-t kell használni. Ha a LEFT és INNER JOIN sorszáma eltér, vannak orphan sorok — ezek revenue-ja elveszne INNER JOIN esetén.</p>
+    <div class="sql-block">
+<span class="sql-cm">-- Q07: orders sorainak száma</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_elott <span class="sql-kw">FROM</span> orders;<br><br>
+<span class="sql-cm">-- Q08: LEFT JOIN — minden orders sor megtartva</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> left_join_count<br>
+<span class="sql-kw">FROM</span> orders o <span class="sql-kw">LEFT JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id;<br><br>
+<span class="sql-cm">-- Q09: INNER JOIN — csak egyező sorok</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> inner_join_count<br>
+<span class="sql-kw">FROM</span> orders o <span class="sql-kw">INNER JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id;
+    </div>
+    <table style="margin-top:12px;max-width:420px">
+      <thead><tr><th>Lekérdezés</th><th>Eredmény</th><th>Következtetés</th></tr></thead>
+      <tbody>
+        <tr><td>Q07 — orders COUNT</td><td>50</td><td>Kiindulópont</td></tr>
+        <tr><td>Q08 — LEFT JOIN</td><td>50</td><td class="pos">Nincs sorvesztés ✓</td></tr>
+        <tr><td>Q09 — INNER JOIN</td><td class="warn">48</td><td class="neg">2 orphan kiesik!</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q10 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 10 — Orphan rendelések azonosítása</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Azonosítjuk azokat a rendeléseket, amelyekhez nem található ügyfélrekord. Ezek a sorok az elemzésben maradnak, az ügyfél-szegmens UNKNOWN értéket kap.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> o.order_id, o.customer_id, o.dq_flag, o.revenue<br>
+<span class="sql-kw">FROM</span> orders o<br>
+<span class="sql-kw">LEFT JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id<br>
+<span class="sql-kw">WHERE</span> c.customer_id <span class="sql-kw">IS NULL</span>;
+    </div>
+    <table style="margin-top:12px;max-width:400px">
+      <thead><tr><th>order_id</th><th>customer_id</th><th>dq_flag</th><th>revenue</th></tr></thead>
+      <tbody>
+        <tr><td>1015</td><td>C999</td><td><span class="badge red">orphan</span></td><td>67.5</td></tr>
+        <tr><td>1045</td><td><em style="color:#aaa">NULL</em></td><td><span class="badge yellow">missing_customer</span></td><td>45.6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q11 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 11 — Rendelés nélküli ügyfelek</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Ellenőrizzük, hogy van-e olyan ügyfél a customers táblában, akihez nem tartozik egyetlen rendelés sem. Ez inaktív ügyfeleket vagy adatrögzítési hibát jelezhet.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> rendeles_nelkuli_customers<br>
+<span class="sql-kw">FROM</span> customers c<br>
+<span class="sql-kw">LEFT JOIN</span> orders o <span class="sql-kw">ON</span> c.customer_id = o.customer_id<br>
+<span class="sql-kw">WHERE</span> o.order_id <span class="sql-kw">IS NULL</span>;
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:#10b981;font-weight:600">✓ Eredmény: 0 — minden customers rekordhoz tartozik legalább egy rendelés.</p>
+  </div>
+
+  <p class="section-title">4. Elemzési lekérdezések</p>
+
+  <!-- Q12 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 12 — Nettó revenue channel-enként</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Az értékesítési csatornák teljesítményét hasonlítjuk össze nettó revenue, visszaküldési arány, átlagos rendelési érték (AOV) és discount szint szerint. A nettó számítás kizárja a visszaküldött rendelések bevételét.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> channel,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> 1 <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> visszaru_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(100.0 * <span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> 1 <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) / <span class="sql-fn">COUNT</span>(*), 1) <span class="sql-kw">AS</span> return_rate_pct,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> aov,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(discount), 3) <span class="sql-kw">AS</span> atlag_discount<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> channel<br>
+<span class="sql-kw">ORDER BY</span> netto_revenue <span class="sql-kw">DESC</span>;
+    </div>
+    <table style="margin-top:12px">
+      <thead><tr><th>channel</th><th>orders_db</th><th>visszaru_db</th><th>return_rate_pct</th><th>netto_revenue</th><th>aov</th><th>atlag_discount</th></tr></thead>
+      <tbody>
+        <tr><td><strong>web</strong></td><td>23</td><td>1</td><td><span class="badge green">4.3%</span></td><td class="pos">949.15</td><td>43.14</td><td>0.033</td></tr>
+        <tr><td><strong>partner</strong></td><td>13</td><td>1</td><td><span class="badge yellow">7.7%</span></td><td>697.64</td><td>58.14</td><td>0.073</td></tr>
+        <tr><td><strong>marketplace</strong></td><td>14</td><td>4</td><td><span class="badge red">28.6%</span></td><td class="neg">490.05</td><td>49.01</td><td>0.057</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q13 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 13 — Nettó revenue termékkategóriánként</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A három termékkategória (Clothing, Electronics, Home &amp; Garden) összesített nettó revenue-ját és AOV-ját vizsgáljuk. Ez megmutatja, melyik kategória hordozza a legnagyobb bevételi súlyt.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> category,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> aov<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> category<br>
+<span class="sql-kw">ORDER BY</span> netto_revenue <span class="sql-kw">DESC</span>;
+    </div>
+    <table style="margin-top:12px;max-width:480px">
+      <thead><tr><th>category</th><th>orders_db</th><th>netto_revenue</th><th>aov</th></tr></thead>
+      <tbody>
+        <tr><td>Clothing</td><td>16</td><td class="pos">784.19</td><td>60.32</td></tr>
+        <tr><td>Electronics</td><td>18</td><td>746.62</td><td>46.66</td></tr>
+        <tr><td>Home &amp; Garden</td><td>16</td><td>606.03</td><td>40.40</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q13b -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 13b — Channel × Category mátrix (súlyozott átlagárral)</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Kétdimenziós bontásban vizsgáljuk, hogy melyik channel-category kombináció milyen nettó revenue-t és súlyozott átlagárat produkál. Ez azonosítja a legjövedelmezőbb és legproblémásabb kombinációkat.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> channel, category,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> quantity <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> teljesult_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) /<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">NULLIF</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> quantity <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 0), 2) <span class="sql-kw">AS</span> sulyozott_atlagár<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> channel, category<br>
+<span class="sql-kw">ORDER BY</span> channel, netto_revenue <span class="sql-kw">DESC</span>;
+    </div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table>
+        <thead><tr><th>channel</th><th>category</th><th>orders_db</th><th>teljesult_db</th><th>netto_revenue</th><th>sulyozott_atlagár</th></tr></thead>
+        <tbody>
+          <tr><td>marketplace</td><td>Electronics</td><td>5</td><td>8</td><td>267.25</td><td>33.41</td></tr>
+          <tr><td>marketplace</td><td>Home &amp; Garden</td><td>5</td><td>10</td><td>180.8</td><td>18.08</td></tr>
+          <tr><td>marketplace</td><td>Clothing</td><td>4</td><td>3</td><td class="neg">42.0</td><td>14.0</td></tr>
+          <tr><td>partner</td><td>Clothing</td><td>4</td><td>14</td><td>304.44</td><td>21.75</td></tr>
+          <tr><td>partner</td><td>Electronics</td><td>6</td><td>13</td><td>240.8</td><td>18.52</td></tr>
+          <tr><td>partner</td><td>Home &amp; Garden</td><td>3</td><td>8</td><td>152.4</td><td>19.05</td></tr>
+          <tr><td>web</td><td>Clothing</td><td>8</td><td>20</td><td>437.75</td><td>21.89</td></tr>
+          <tr><td>web</td><td>Electronics</td><td>7</td><td>12</td><td>238.57</td><td>19.88</td></tr>
+          <tr><td>web</td><td>Home &amp; Garden</td><td>8</td><td>21</td><td>272.83</td><td>12.99</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Q13c-e -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 13c–e — Marketplace-Clothing anomália részletezés</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A mátrix alapján kiemelkedő marketplace-Clothing kombinációt háromféle szempont szerint vizsgáljuk: egyedi rendelések (13c), összesített elveszett revenue (13d), és az elveszett revenue teljes nettó revenue-hoz viszonyított aránya (13e).</p>
+    <div class="sql-block">
+<span class="sql-cm">-- Q13c: Egyedi rendelések listája</span><br>
+<span class="sql-kw">SELECT</span> order_id, product_name, quantity, unit_price, discount, is_returned, revenue<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">WHERE</span> channel = <span class="sql-str">'marketplace'</span> <span class="sql-kw">AND</span> category = <span class="sql-str">'Clothing'</span><br>
+<span class="sql-kw">ORDER BY</span> revenue <span class="sql-kw">DESC</span>;<br><br>
+<span class="sql-cm">-- Q13d: Összesített elveszett revenue</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(revenue), 2) <span class="sql-kw">AS</span> brutto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> elveszett_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> osszes_order,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> 1 <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> visszaru_db<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">WHERE</span> channel = <span class="sql-str">'marketplace'</span> <span class="sql-kw">AND</span> category = <span class="sql-str">'Clothing'</span>;<br><br>
+<span class="sql-cm">-- Q13e: Elveszett revenue % a teljes nettó revenue-hoz</span><br>
+<span class="sql-kw">SELECT</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> teljes_netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> channel = <span class="sql-str">'marketplace'</span> <span class="sql-kw">AND</span> category = <span class="sql-str">'Clothing'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> elveszett_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(100.0 * <span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> channel = <span class="sql-str">'marketplace'</span> <span class="sql-kw">AND</span> category = <span class="sql-str">'Clothing'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'yes'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) /<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 1) <span class="sql-kw">AS</span> elveszett_pct<br>
+<span class="sql-kw">FROM</span> orders;
+    </div>
+    <div class="two-col" style="margin-top:12px">
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q13c — Egyedi rendelések</p>
+        <table>
+          <thead><tr><th>order_id</th><th>product_name</th><th>qty</th><th>unit_price</th><th>disc.</th><th>returned</th><th>revenue</th></tr></thead>
+          <tbody>
+            <tr><td>1017</td><td>Sneakers</td><td>1</td><td>95.0</td><td>15%</td><td><span class="badge red">yes</span></td><td class="neg">80.75</td></tr>
+            <tr><td>1029</td><td>Baseball Cap</td><td>3</td><td>16.5</td><td>5%</td><td><span class="badge red">yes</span></td><td class="neg">47.03</td></tr>
+            <tr><td>1042</td><td>Beanie</td><td>3</td><td>14.0</td><td>0%</td><td><span class="badge green">no</span></td><td class="pos">42.00</td></tr>
+            <tr><td>1049</td><td>Gloves</td><td>2</td><td>21.0</td><td>0%</td><td><span class="badge red">yes</span></td><td class="neg">42.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q13d–e — Összesített hatás</p>
+        <table>
+          <thead><tr><th>Mutató</th><th>Érték</th></tr></thead>
+          <tbody>
+            <tr><td>Bruttó revenue</td><td>211.78</td></tr>
+            <tr><td>Nettó revenue</td><td class="pos">42.00</td></tr>
+            <tr><td>Elveszett revenue</td><td class="neg">169.78</td></tr>
+            <tr><td>Összes rendelés</td><td>4</td></tr>
+            <tr><td>Visszáru</td><td class="neg">3 / 4</td></tr>
+            <tr><td>Teljes nettó revenue</td><td>2 136.84</td></tr>
+            <tr><td>Elveszett %</td><td class="neg">7.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q14 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 14 — Revenue szegmens szerint (LEFT JOIN)</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Az ügyféltábla szegmens mezője (new / returning) alapján hasonlítjuk össze a két csoport revenue-ját. LEFT JOIN-t használunk, hogy az orphan rendelések UNKNOWN szegmensként ne vesszenek el. A COALESCE gondoskodik az ismeretlen szegmens kezeléséről.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> <span class="sql-fn">COALESCE</span>(c.segment, <span class="sql-str">'UNKNOWN'</span>) <span class="sql-kw">AS</span> segment,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> o.is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> o.revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(<span class="sql-kw">CASE WHEN</span> o.is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> o.revenue <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> aov<br>
+<span class="sql-kw">FROM</span> orders o<br>
+<span class="sql-kw">LEFT JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.customer_id<br>
+<span class="sql-kw">GROUP BY</span> c.segment<br>
+<span class="sql-kw">ORDER BY</span> netto_revenue <span class="sql-kw">DESC</span>;
+    </div>
+    <table style="margin-top:12px;max-width:420px">
+      <thead><tr><th>segment</th><th>orders_db</th><th>netto_revenue</th><th>aov</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge yellow">new</span></td><td>35</td><td class="pos">1 325.75</td><td>44.19</td></tr>
+        <tr><td><span class="badge green">returning</span></td><td>13</td><td>697.99</td><td class="pos">58.17</td></tr>
+        <tr><td><span class="badge red">UNKNOWN</span></td><td>2</td><td>113.10</td><td>56.55</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Q15 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 15 — Havi trend és napi átlag</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A két hónap összehasonlítása abszolút és napi átlag szinten. A napi átlag korrigál az eltérő időszakhosszra — február 19 napot fed le januárhoz képest (27 nap), ezért a napi átlag a valódi teljesítménycsökkenés mértéke.</p>
+    <div class="sql-block">
+<span class="sql-cm">-- Q15: Havi összesítő</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) <span class="sql-kw">AS</span> honap,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue<br>
+<span class="sql-kw">FROM</span> orders <span class="sql-kw">GROUP BY</span> honap <span class="sql-kw">ORDER BY</span> honap;<br><br>
+<span class="sql-cm">-- Q15b: Napi átlagos revenue (időszak-hossz korrekcióval)</span><br>
+<span class="sql-kw">SELECT</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) <span class="sql-kw">AS</span> honap,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(<span class="sql-kw">DISTINCT</span> order_date) <span class="sql-kw">AS</span> aktiv_napok,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) / <span class="sql-fn">COUNT</span>(<span class="sql-kw">DISTINCT</span> order_date), 2) <span class="sql-kw">AS</span> napi_atlag_revenue<br>
+<span class="sql-kw">FROM</span> orders <span class="sql-kw">GROUP BY</span> honap <span class="sql-kw">ORDER BY</span> honap;
+    </div>
+    <div class="two-col" style="margin-top:12px">
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q15 — Havi összesítő</p>
+        <table>
+          <thead><tr><th>honap</th><th>orders_db</th><th>netto_revenue</th></tr></thead>
+          <tbody>
+            <tr><td>2024-01</td><td>31</td><td>1 484.39</td></tr>
+            <tr><td>2024-02</td><td>19</td><td class="neg">652.45</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q15b — Napi átlaggal korrigálva</p>
+        <table>
+          <thead><tr><th>honap</th><th>aktiv_napok</th><th>netto_revenue</th><th>napi_atlag</th></tr></thead>
+          <tbody>
+            <tr><td>2024-01</td><td>27</td><td>1 484.39</td><td>54.98</td></tr>
+            <tr><td>2024-02</td><td>19</td><td class="neg">652.45</td><td class="neg">34.34</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q15c-f -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 15c–f — Havi mix és hiányzó termékek feltárása</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Februárban más channel-category kombináció volt aktív, mint januárban. Ezek a lekérdezések feltárják, hogy a visszaesés mögött konkrétan melyik kombinációk tűntek el, és melyek tűntek fel újonnan.</p>
+    <div class="sql-block">
+<span class="sql-cm">-- Q15c: Februári revenue mix channel-category bontásban</span><br>
+<span class="sql-kw">SELECT</span> channel, category, <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> orders_db,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> netto_revenue<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">WHERE</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-02'</span><br>
+<span class="sql-kw">GROUP BY</span> channel, category <span class="sql-kw">ORDER BY</span> netto_revenue <span class="sql-kw">DESC</span>;<br><br>
+<span class="sql-cm">-- Q15e: Channel-category pivot: Jan vs Feb variance</span><br>
+<span class="sql-kw">SELECT</span> channel || <span class="sql-str">' | '</span> || category <span class="sql-kw">AS</span> channel_category,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-01'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> jan,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-02'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> feb,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;feb - jan <span class="sql-kw">AS</span> variance<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> channel, category <span class="sql-kw">ORDER BY</span> variance <span class="sql-kw">ASC</span>;
+    </div>
+    <div class="two-col" style="margin-top:12px">
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q15c — Február mix</p>
+        <table>
+          <thead><tr><th>channel</th><th>category</th><th>orders</th><th>netto_rev.</th></tr></thead>
+          <tbody>
+            <tr><td>web</td><td>Clothing</td><td>4</td><td>197.78</td></tr>
+            <tr><td>marketplace</td><td>Electronics</td><td>2</td><td>82.77</td></tr>
+            <tr><td>web</td><td>Home &amp; Garden</td><td>3</td><td>75.68</td></tr>
+            <tr><td>partner</td><td>Home &amp; Garden</td><td>1</td><td>72.20</td></tr>
+            <tr><td>partner</td><td>Electronics</td><td>3</td><td>69.58</td></tr>
+            <tr><td>marketplace</td><td>Home &amp; Garden</td><td>2</td><td>53.00</td></tr>
+            <tr><td>marketplace</td><td>Clothing</td><td>2</td><td>42.00</td></tr>
+            <tr><td>partner</td><td>Clothing</td><td>1</td><td>40.46</td></tr>
+            <tr><td>web</td><td>Electronics</td><td>1</td><td>18.98</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Q15e — Jan vs Feb variance</p>
+        <table>
+          <thead><tr><th>channel | category</th><th>2024-01</th><th>2024-02</th><th>variance</th></tr></thead>
+          <tbody>
+            <tr><td>partner | Clothing</td><td>263.98</td><td>40.46</td><td class="neg">-223.52</td></tr>
+            <tr><td>web | Electronics</td><td>219.59</td><td>18.98</td><td class="neg">-200.61</td></tr>
+            <tr><td>web | Home &amp; Garden</td><td>197.15</td><td>75.68</td><td class="neg">-121.47</td></tr>
+            <tr><td>marketplace | Electronics</td><td>184.48</td><td>82.77</td><td class="neg">-101.71</td></tr>
+            <tr><td>partner | Electronics</td><td>171.22</td><td>69.58</td><td class="neg">-101.64</td></tr>
+            <tr><td>marketplace | Home &amp; Garden</td><td>127.80</td><td>53.00</td><td class="neg">-74.80</td></tr>
+            <tr><td>web | Clothing</td><td>239.97</td><td>197.78</td><td class="neg">-42.19</td></tr>
+            <tr><td>partner | Home &amp; Garden</td><td>80.20</td><td>72.20</td><td class="neg">-8.00</td></tr>
+            <tr><td>marketplace | Clothing</td><td>0.00</td><td>42.00</td><td class="pos">+42.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">5. Variance elemzés — termék és kategória szint</p>
+
+  <!-- Q16a -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 16a — Termék szintű variance (Jan vs Feb)</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">Termékszinten azonosítjuk, mely termékek tűntek el februárban (jan_revenue > 0, feb_revenue = 0) és melyek jelentek meg újonnan. Ez a lekérdezés adja a "26 eltűnt termék" megállapítás alapját.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> product_name,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-01'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> jan_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-02'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> feb_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;feb_revenue - jan_revenue <span class="sql-kw">AS</span> variance<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> product_name<br>
+<span class="sql-kw">ORDER BY</span> variance <span class="sql-kw">ASC</span>;
+    </div>
+    <div style="overflow-x:auto;margin-top:12px;max-height:320px;overflow-y:auto">
+      <table>
+        <thead><tr><th>product_name</th><th>jan_revenue</th><th>feb_revenue</th><th>variance</th></tr></thead>
+        <tbody>
+          <tr><td>Winter Jacket</td><td>119.99</td><td>0.0</td><td class="neg">-119.99</td></tr>
+          <tr><td>Running Shoes</td><td>108.0</td><td>0.0</td><td class="neg">-108.0</td></tr>
+          <tr><td>Webcam</td><td>104.5</td><td>0.0</td><td class="neg">-104.5</td></tr>
+          <tr><td>Hoodie</td><td>89.98</td><td>0.0</td><td class="neg">-89.98</td></tr>
+          <tr><td>Power Bank</td><td>79.98</td><td>0.0</td><td class="neg">-79.98</td></tr>
+          <tr><td>Wireless Mouse</td><td>72.77</td><td>0.0</td><td class="neg">-72.77</td></tr>
+          <tr><td>Keyboard</td><td>67.5</td><td>0.0</td><td class="neg">-67.5</td></tr>
+          <tr><td>Scarf</td><td>66.0</td><td>0.0</td><td class="neg">-66.0</td></tr>
+          <tr><td>Jeans</td><td>65.0</td><td>0.0</td><td class="neg">-65.0</td></tr>
+          <tr><td>USB Cable</td><td>59.9</td><td>0.0</td><td class="neg">-59.9</td></tr>
+          <tr><td>Throw Pillow</td><td>56.97</td><td>0.0</td><td class="neg">-56.97</td></tr>
+          <tr><td>Candle Set</td><td>54.0</td><td>0.0</td><td class="neg">-54.0</td></tr>
+          <tr><td>Flower Vase</td><td>53.2</td><td>0.0</td><td class="neg">-53.2</td></tr>
+          <tr><td>USB Hub</td><td>52.73</td><td>0.0</td><td class="neg">-52.73</td></tr>
+          <tr><td>Photo Frame</td><td>52.2</td><td>0.0</td><td class="neg">-52.2</td></tr>
+          <tr><td>Earbuds</td><td>50.99</td><td>0.0</td><td class="neg">-50.99</td></tr>
+          <tr><td>Plant Pot</td><td>48.0</td><td>0.0</td><td class="neg">-48.0</td></tr>
+          <tr><td>Desk Lamp</td><td>45.0</td><td>0.0</td><td class="neg">-45.0</td></tr>
+          <tr><td>HDMI Cable</td><td>44.95</td><td>0.0</td><td class="neg">-44.95</td></tr>
+          <tr><td>Door Mat</td><td>39.98</td><td>0.0</td><td class="neg">-39.98</td></tr>
+          <tr><td>Polo Shirt</td><td>34.99</td><td>0.0</td><td class="neg">-34.99</td></tr>
+          <tr><td>Kitchen Scale</td><td>28.8</td><td>0.0</td><td class="neg">-28.8</td></tr>
+          <tr><td>Soap Dispenser</td><td>27.0</td><td>0.0</td><td class="neg">-27.0</td></tr>
+          <tr><td>Mouse Pad</td><td>25.98</td><td>0.0</td><td class="neg">-25.98</td></tr>
+          <tr><td>T-Shirt</td><td>19.99</td><td>0.0</td><td class="neg">-19.99</td></tr>
+          <tr><td>Phone Case</td><td>15.99</td><td>0.0</td><td class="neg">-15.99</td></tr>
+          <tr style="background:#f0fdf4"><td>Baseball Cap</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Bluetooth Speaker</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Gloves</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Sneakers</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Wall Clock</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Coasters Set</td><td>0.0</td><td>15.2</td><td class="pos">+15.2</td></tr>
+          <tr style="background:#f0fdf4"><td>Screen Protector</td><td>0.0</td><td>18.98</td><td class="pos">+18.98</td></tr>
+          <tr style="background:#f0fdf4"><td>Cable Organizer</td><td>0.0</td><td>23.98</td><td class="pos">+23.98</td></tr>
+          <tr style="background:#f0fdf4"><td>Table Runner</td><td>0.0</td><td>24.5</td><td class="pos">+24.5</td></tr>
+          <tr style="background:#f0fdf4"><td>Belt</td><td>0.0</td><td>25.0</td><td class="pos">+25.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Picture Hook Set</td><td>0.0</td><td>26.0</td><td class="pos">+26.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Laundry Basket</td><td>0.0</td><td>27.0</td><td class="pos">+27.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Cutting Board</td><td>0.0</td><td>35.98</td><td class="pos">+35.98</td></tr>
+          <tr style="background:#f0fdf4"><td>Laptop Stand</td><td>0.0</td><td>37.8</td><td class="pos">+37.8</td></tr>
+          <tr style="background:#f0fdf4"><td>Wool Socks</td><td>0.0</td><td>40.46</td><td class="pos">+40.46</td></tr>
+          <tr style="background:#f0fdf4"><td>Beanie</td><td>0.0</td><td>42.0</td><td class="pos">+42.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Charger</td><td>0.0</td><td>44.97</td><td class="pos">+44.97</td></tr>
+          <tr style="background:#f0fdf4"><td>Monitor Riser</td><td>0.0</td><td>45.6</td><td class="pos">+45.6</td></tr>
+          <tr style="background:#f0fdf4"><td>Dress Shirt</td><td>0.0</td><td>55.0</td><td class="pos">+55.0</td></tr>
+          <tr style="background:#f0fdf4"><td>Cardigan</td><td>0.0</td><td>57.8</td><td class="pos">+57.8</td></tr>
+          <tr style="background:#f0fdf4"><td>Leggings</td><td>0.0</td><td>59.98</td><td class="pos">+59.98</td></tr>
+          <tr style="background:#f0fdf4"><td>Bath Towel Set</td><td>0.0</td><td>72.2</td><td class="pos">+72.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:8px;">Piros sorok = januárban aktív, februárban eltűnt (26 termék). Zöld sorok = februárban újonnan megjelent (22 termék). A csere nem kompenzálja a kiesést.</p>
+  </div>
+
+  <!-- Q16b -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>Query 16b — Kategória szintű variance</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">A termékszintű variance kategóriákra aggregálva megmutatja, hogy a visszaesés egyenletesen érinti-e a kategóriákat, vagy van-e domináns kategória. Ha mindhárom kategória érintett, az rendszerszintű problémára utal.</p>
+    <div class="sql-block">
+<span class="sql-kw">SELECT</span> category,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-01'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> jan_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> <span class="sql-fn">strftime</span>(<span class="sql-str">'%Y-%m'</span>, order_date) = <span class="sql-str">'2024-02'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-kw">AND</span> is_returned = <span class="sql-str">'no'</span> <span class="sql-kw">THEN</span> revenue <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>), 2) <span class="sql-kw">AS</span> feb_revenue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;feb_revenue - jan_revenue <span class="sql-kw">AS</span> variance<br>
+<span class="sql-kw">FROM</span> orders<br>
+<span class="sql-kw">GROUP BY</span> category<br>
+<span class="sql-kw">ORDER BY</span> variance <span class="sql-kw">ASC</span>;
+    </div>
+    <table style="margin-top:12px;max-width:480px">
+      <thead><tr><th>category</th><th>jan_revenue</th><th>feb_revenue</th><th>variance</th></tr></thead>
+      <tbody>
+        <tr><td>Electronics</td><td>575.29</td><td>171.33</td><td class="neg">-403.96</td></tr>
+        <tr><td>Clothing</td><td>503.95</td><td>280.24</td><td class="neg">-223.71</td></tr>
+        <tr><td>Home &amp; Garden</td><td>405.15</td><td>200.88</td><td class="neg">-204.27</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#888;margin-top:8px;">Mindhárom kategória negatív variance-t mutat — ez megerősíti, hogy a visszaesés nem kategória-specifikus, hanem rendszerszintű.</p>
+  </div>
+
+</div>
+
+<div class="footer">Webshop EDA Report &nbsp;|&nbsp; AI-asszisztált elemzés &nbsp;|&nbsp; Claude + DBeaver + SQLite &nbsp;|&nbsp; 2024-06</div>
+
+<script>
+function show(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  return false;
+}
+
+// Channel chart
+new Chart(document.getElementById('channelChart'), {
+  type: 'bar',
+  data: {
+    labels: ['web', 'partner', 'marketplace'],
+    datasets: [
+      {
+        label: 'Nettó revenue',
+        data: [949.15, 697.64, 490.05],
+        backgroundColor: ['#3b82f6','#8b5cf6','#ef4444'],
+        borderRadius: 6, yAxisID: 'y'
+      },
+      {
+        label: 'Return rate %',
+        data: [4.3, 7.7, 28.6],
+        type: 'line',
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.1)',
+        borderWidth: 2, pointRadius: 5,
+        yAxisID: 'y2', tension: 0.3
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Nettó revenue', font: { size: 11 } } },
+      y2: { beginAtZero: true, position: 'right', title: { display: true, text: 'Return rate %', font: { size: 11 } },
+        grid: { drawOnChartArea: false }, max: 40 }
+    }
+  }
+});
+
+// Trend chart — napi átlagbevétel
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2024-01', '2024-02'],
+    datasets: [
+      { label: 'Napi átlagbevétel (HUF)', data: [54.98, 34.34], backgroundColor: ['#3b82f6','#ef4444'], borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 11 } } },
+    },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'HUF / nap', font: { size: 11 } } }
+    }
+  }
+});
+
+// Category chart
+new Chart(document.getElementById('categoryChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Electronics', 'Clothing', 'Home & Garden'],
+    datasets: [
+      { label: 'Jan napi átlag', data: [21.31, 18.66, 15.01], backgroundColor: '#3b82f6', borderRadius: 4 },
+      { label: 'Feb napi átlag', data: [9.02, 14.75, 10.57], backgroundColor: '#ef4444', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 11 } } }
+    },
+    scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } } }
+  }
+});
+</script>
+</body>
+</html>

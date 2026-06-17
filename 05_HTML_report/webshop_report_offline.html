@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webshop EDA Report — 2024</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0f0f1a;color:#e0e0f0;min-height:100vh}
+nav{position:sticky;top:0;z-index:100;background:#12122a;border-bottom:2px solid #e84393;display:flex;gap:0;padding:0 1rem}
+nav a{padding:.75rem 1.2rem;color:#aab;text-decoration:none;font-size:.85rem;font-weight:600;letter-spacing:.05em;transition:color .2s,background .2s}
+nav a:hover,nav a.active{color:#e84393;background:#1a1a3a}
+.section{display:none;padding:2rem;max-width:1200px;margin:0 auto}
+.section.active{display:block}
+h1{font-size:2rem;font-weight:800;color:#fff;margin-bottom:.25rem}
+h2{font-size:1.3rem;font-weight:700;color:#e84393;margin:1.5rem 0 .75rem;letter-spacing:.04em}
+h3{font-size:1rem;font-weight:700;color:#aabbff;margin:.75rem 0 .4rem}
+.subtitle{color:#8899bb;font-size:.95rem;margin-bottom:1.5rem}
+
+/* ISSUE BANNER */
+.issue-banner{background:linear-gradient(135deg,#2a0a1a,#1a0a2a);border:2px solid #e84393;border-radius:12px;padding:1.5rem 2rem;margin-bottom:2rem;position:relative;overflow:hidden}
+.issue-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:#e84393}
+.issue-label{font-size:.7rem;font-weight:800;letter-spacing:.15em;color:#e84393;margin-bottom:.5rem}
+.issue-title{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.5rem;line-height:1.3}
+.issue-sub{color:#cc99bb;font-size:.9rem;font-style:italic}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+.kpi-card{background:#1a1a2e;border-radius:10px;padding:1.25rem 1.5rem;border-left:5px solid #e84393;position:relative}
+.kpi-card.red{border-color:#ef4444}
+.kpi-card.amber{border-color:#f59e0b}
+.kpi-card.green{border-color:#10b981}
+.kpi-val{font-size:2.2rem;font-weight:900;line-height:1}
+.kpi-card.red .kpi-val{color:#ef4444}
+.kpi-card.amber .kpi-val{color:#f59e0b}
+.kpi-card.green .kpi-val{color:#10b981}
+.kpi-label{font-size:.8rem;font-weight:700;color:#dde;margin:.4rem 0 .2rem}
+.kpi-sub{font-size:.75rem;color:#778}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{background:#1a1a2e;color:#e84393;padding:.6rem .9rem;text-align:left;font-size:.75rem;letter-spacing:.08em;font-weight:700;border-bottom:2px solid #e84393}
+td{padding:.55rem .9rem;border-bottom:1px solid #222244;color:#ccd}
+tr:hover td{background:#1a1a2e}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-size:.72rem;font-weight:700}
+.badge-red{background:#3d0010;color:#ff8899}
+.badge-amber{background:#3d2000;color:#ffcc66}
+.badge-green{background:#003d1a;color:#66ffaa}
+.badge-blue{background:#001a3d;color:#66aaff}
+
+/* CARDS */
+.card{background:#1a1a2e;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1rem;border:1px solid #222244}
+.card-title{font-size:.75rem;font-weight:800;letter-spacing:.1em;color:#8899bb;margin-bottom:.75rem}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem}
+
+/* ACTIONS */
+.action-list{list-style:none;margin:.5rem 0}
+.action-list li{padding:.6rem .9rem;margin:.4rem 0;background:#12122a;border-radius:6px;border-left:3px solid #e84393;font-size:.9rem;color:#dde;line-height:1.4}
+.action-list li::before{content:'→ ';color:#e84393;font-weight:700}
+
+/* CHECKLIST */
+.checklist{list-style:none}
+.checklist li{padding:.55rem .9rem;margin:.35rem 0;border-radius:6px;font-size:.88rem;display:flex;align-items:flex-start;gap:.6rem;line-height:1.4}
+.checklist li.ok{background:#0a2a1a;border:1px solid #1a4a2a}
+.checklist li.warn{background:#2a1a00;border:1px solid #4a3a00}
+.check-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+
+/* SVG CHARTS */
+.chart-box{background:#12122a;border-radius:10px;padding:1.25rem;border:1px solid #222244;margin-bottom:1rem}
+.chart-box .chart-title{font-size:.75rem;font-weight:800;letter-spacing:.1em;color:#8899bb;margin-bottom:1rem}
+svg text{font-family:'Segoe UI',Arial,sans-serif}
+
+/* CODE */
+pre{background:#0a0a1a;border:1px solid #333;border-radius:6px;padding:1rem;font-size:.8rem;color:#aaffcc;overflow-x:auto;margin:.5rem 0}
+
+/* HEATMAP */
+.heatmap-cell{padding:.5rem .8rem;text-align:center;border-radius:4px;font-size:.82rem;font-weight:600}
+
+@media(max-width:700px){.two-col,.three-col{grid-template-columns:1fr}nav a{padding:.6rem .7rem;font-size:.75rem}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="#" onclick="show('exec')" class="active">Executive Summary</a>
+  <a href="#" onclick="show('adat')">Adatforrás</a>
+  <a href="#" onclick="show('dq')">Adatminőség</a>
+  <a href="#" onclick="show('channel')">Channel elemzés</a>
+  <a href="#" onclick="show('trend')">Havi trend</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 1. EXECUTIVE SUMMARY                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="exec" class="section active">
+  <h1>Webshop EDA Report</h1>
+  <p class="subtitle">AI-asszisztált elemzés · SQLite + DBeaver · 2024-06</p>
+
+  <div class="issue-banner">
+    <div class="issue-label">⚠ ISSUE REPORT — AZONNALI INTÉZKEDÉS SZÜKSÉGES</div>
+    <div class="issue-title">A februári termékportfólió-váltás 831 egységnyi árbevétel-kiesést okozott</div>
+    <div class="issue-sub">Operatív probléma valószínűsíthető — minden channel és category érintett</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card red">
+      <div class="kpi-val">−56%</div>
+      <div class="kpi-label">Árbevétel visszaesés</div>
+      <div class="kpi-sub">Jan: 1 484 → Feb: 652</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-val">−38%</div>
+      <div class="kpi-label">Napi átlag csökkenés</div>
+      <div class="kpi-sub">Időszak hosszával korrigálva</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-val">26</div>
+      <div class="kpi-label">Eltűnt termék</div>
+      <div class="kpi-sub">Januárban aktív, februárban 0</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-val">7.9%</div>
+      <div class="kpi-label">Marketplace-Clothing veszteség</div>
+      <div class="kpi-sub">169.78 egység, 3/4 visszáru</div>
+    </div>
+  </div>
+
+  <h2>AZONNALI INTÉZKEDÉSI TERV</h2>
+  <ul class="action-list">
+    <li>Értékesítési és beszerzési osztály: mi okozta a 26 termék eltűnését februárban?</li>
+    <li>Marketplace-Clothing kivizsgálása: 169.78 egység elveszett revenue — 7.9% a teljes nettóból</li>
+    <li>Management értesítési folyamat: miért nem volt hamarabb jelzés ekkora visszaesésről?</li>
+    <li>Február teljes hónap adata szükséges — az elemzés feb. 19-ig tart</li>
+  </ul>
+
+  <h2>CHANNEL–CATEGORY HEATMAP (nettó revenue)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel</th><th>Electronics</th><th>Clothing</th><th>Home &amp; Garden</th><th>ÖSSZESEN</th></tr></thead>
+      <tbody>
+        <tr><td><strong>web</strong></td>
+          <td><div class="heatmap-cell" style="background:#1a3a5a;color:#6ab4ff">238.57</div></td>
+          <td><div class="heatmap-cell" style="background:#1a4a3a;color:#66ffaa">437.75</div></td>
+          <td><div class="heatmap-cell" style="background:#1a3a4a;color:#66ccff">272.83</div></td>
+          <td><strong>949.15</strong></td></tr>
+        <tr><td><strong>partner</strong></td>
+          <td><div class="heatmap-cell" style="background:#1a2a4a;color:#4488dd">240.80</div></td>
+          <td><div class="heatmap-cell" style="background:#1a3a4a;color:#66ccff">304.44</div></td>
+          <td><div class="heatmap-cell" style="background:#111a2a;color:#336699">152.40</div></td>
+          <td><strong>697.64</strong></td></tr>
+        <tr><td><strong>marketplace</strong></td>
+          <td><div class="heatmap-cell" style="background:#1a2a3a;color:#5599cc">267.25</div></td>
+          <td><div class="heatmap-cell" style="background:#3a0a1a;color:#ff8899">42.00 ⚠</div></td>
+          <td><div class="heatmap-cell" style="background:#111a2a;color:#336699">180.80</div></td>
+          <td><strong>490.05</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 2. ADATFORRÁS                                       -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="adat" class="section">
+  <h1>Adatforrás és táblakapcsolat</h1>
+  <p class="subtitle">Az elemzés két táblán alapul: 50 rendelés, 45 ügyfél — LEFT JOIN-nal összekapcsolva</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">ORDERS TÁBLA — 50 SOR</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+          <tbody>
+            <tr><td><code>order_id</code></td><td>INTEGER</td><td>Elsődleges kulcs (PK)</td></tr>
+            <tr><td><code>customer_id</code></td><td>TEXT</td><td>Kapcsoló kulcs (FK)</td></tr>
+            <tr><td><code>order_date</code></td><td>TEXT</td><td>YYYY-MM-DD</td></tr>
+            <tr><td><code>channel</code></td><td>TEXT</td><td>web / marketplace / partner</td></tr>
+            <tr><td><code>category</code></td><td>TEXT</td><td>Electronics / Clothing / H&amp;G</td></tr>
+            <tr><td><code>revenue</code></td><td>REAL</td><td>qty × price × (1−disc)</td></tr>
+            <tr><td><code>is_returned</code></td><td>TEXT</td><td>yes / no</td></tr>
+            <tr><td><code>dq_flag</code></td><td>TEXT</td><td>orphan / missing / NULL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">CUSTOMERS TÁBLA — 45 SOR</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+              <tr><td><code>customer_id</code></td><td>TEXT</td><td>Elsődleges kulcs (PK)</td></tr>
+              <tr><td><code>customer_name</code></td><td>TEXT</td><td>Ügyfél neve</td></tr>
+              <tr><td><code>city</code></td><td>TEXT</td><td>Város</td></tr>
+              <tr><td><code>signup_date</code></td><td>TEXT</td><td>Regisztráció dátuma</td></tr>
+              <tr><td><code>segment</code></td><td>TEXT</td><td>new / returning</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid #10b981">
+        <div class="card-title">JOIN DÖNTÉS ✓</div>
+        <p style="color:#aaffcc;font-size:.9rem;line-height:1.6">
+          <strong>LEFT JOIN</strong> — mert az orphan sorok revenue-ja az árbevétel része,<br>
+          még ha az ügyfél nem azonosítható is.<br>
+          <code>COALESCE(segment, 'UNKNOWN')</code>
+        </p>
+        <div class="table-wrap" style="margin-top:.75rem">
+          <table>
+            <thead><tr><th>Teszt</th><th>Eredmény</th></tr></thead>
+            <tbody>
+              <tr><td>LEFT JOIN sorok</td><td><span class="badge badge-green">50 ✓</span></td></tr>
+              <tr><td>INNER JOIN sorok</td><td><span class="badge badge-amber">48 ⚠ 2 orphan kiesik</span></td></tr>
+              <tr><td>Customer rendelés nélkül</td><td><span class="badge badge-green">0 ✓</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>PÉLDA SOROK — ORDERS</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>order_id</th><th>customer_id</th><th>order_date</th><th>channel</th><th>category</th><th>revenue</th><th>is_returned</th><th>dq_flag</th></tr></thead>
+      <tbody>
+        <tr><td>1001</td><td>C001</td><td>2024-01-03</td><td>web</td><td>Electronics</td><td>89.99</td><td>no</td><td><span class="badge badge-green">NULL</span></td></tr>
+        <tr><td>1015</td><td>C999</td><td>2024-01-18</td><td>marketplace</td><td>Clothing</td><td>45.00</td><td>no</td><td><span class="badge badge-red">orphan</span></td></tr>
+        <tr><td>1032</td><td>C012</td><td>2024-01-29</td><td>partner</td><td>Electronics</td><td>129.99</td><td>yes</td><td><span class="badge badge-green">NULL</span></td></tr>
+        <tr><td>1045</td><td>NULL</td><td>2024-02-14</td><td>web</td><td>Clothing</td><td>34.99</td><td>no</td><td><span class="badge badge-amber">missing</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 3. ADATMINŐSÉG                                      -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="dq" class="section">
+  <h1>Adatminőség és KPI definíciók</h1>
+  <p class="subtitle">3 tudatos döntés született az elemzés előtt — ezek befolyásolják az összes KPI-t</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">ADATMINŐSÉGI ELLENŐRZÉSEK</div>
+      <ul class="checklist">
+        <li class="ok"><span class="check-icon">✓</span><span><strong>dq_flag:</strong> 48 NULL (rendben), 1 missing_customer, 1 orphan — jelölve, elemzésben marad</span></li>
+        <li class="ok"><span class="check-icon">✓</span><span><strong>Revenue képlet:</strong> qty × unit_price × (1−discount) — csak kerekítési eltérés, megbízható</span></li>
+        <li class="ok"><span class="check-icon">✓</span><span><strong>Signup vs order dátum:</strong> nincs rendelés regisztráció előtt</span></li>
+        <li class="warn"><span class="check-icon">⚠</span><span><strong>is_returned:</strong> 6 visszaküldött rendelés — nettó revenue-ból kizárva (alap KPI)</span></li>
+        <li class="warn"><span class="check-icon">⚠</span><span><strong>2 orphan sor:</strong> order 1015 (C999) és 1045 (NULL) — UNKNOWN szegmensként kezelve</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">KPI DEFINÍCIÓK</div>
+      <table>
+        <thead><tr><th>KPI</th><th>Számítás</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nettó revenue</strong></td><td><code>SUM(revenue) WHERE is_returned='no'</code></td></tr>
+          <tr><td><strong>AOV</strong></td><td><code>AVG(revenue) WHERE is_returned='no'</code></td></tr>
+          <tr><td><strong>Return rate</strong></td><td><code>returned / összes × 100.0</code> (100.0× !)</td></tr>
+          <tr><td><strong>Súlyozott átlagár</strong></td><td><code>netto_revenue / teljesult_qty</code></td></tr>
+          <tr><td><strong>Átlag discount</strong></td><td><code>AVG(discount)</code> minden sorra</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>BRUTTÓ vs NETTÓ REVENUE</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mérőszám</th><th>Érték</th><th>Megjegyzés</th></tr></thead>
+      <tbody>
+        <tr><td>Bruttó revenue (összes order)</td><td>2 326.68</td><td>Visszárukkal együtt</td></tr>
+        <tr><td>Visszáru revenue</td><td>189.84</td><td>6 is_returned='yes' rendelés</td></tr>
+        <tr><td><strong>Nettó revenue (alap KPI)</strong></td><td><strong>2 136.84</strong></td><td><span class="badge badge-green">Ez az elemzés alapja</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>FONTOS SQLITE-SPECIFIKUS LECKE</h2>
+  <div class="two-col">
+    <div>
+      <h3>❌ Hibás (egész osztás)</h3>
+      <pre>SELECT 100 * 1 / 14  -- eredmény: 7 (nem 7.14!)</pre>
+    </div>
+    <div>
+      <h3>✓ Helyes (lebegőpontos)</h3>
+      <pre>SELECT 100.0 * 1 / 14  -- eredmény: 7.142857...</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 4. CHANNEL ELEMZÉS                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="channel" class="section">
+  <h1>Channel elemzés</h1>
+  <p class="subtitle">A marketplace return rate 3× magasabb a web channel-nél — a Clothing kategória az elsődleges ok</p>
+
+  <div class="two-col">
+    <div class="chart-box">
+      <div class="chart-title">NETTÓ REVENUE — CHANNEL-ENKÉNT</div>
+      <svg viewBox="0 0 420 240" width="100%">
+        <!-- grid -->
+        <line x1="60" y1="20" x2="60" y2="190" stroke="#333366" stroke-width="1"/>
+        <line x1="60" y1="190" x2="400" y2="190" stroke="#333366" stroke-width="1"/>
+        <!-- y grid -->
+        <line x1="60" y1="140" x2="400" y2="140" stroke="#222244" stroke-dasharray="4,4"/>
+        <line x1="60" y1="90" x2="400" y2="90" stroke="#222244" stroke-dasharray="4,4"/>
+        <line x1="60" y1="40" x2="400" y2="40" stroke="#222244" stroke-dasharray="4,4"/>
+        <!-- y labels -->
+        <text x="55" y="194" fill="#778" font-size="11" text-anchor="end">0</text>
+        <text x="55" y="144" fill="#778" font-size="11" text-anchor="end">333</text>
+        <text x="55" y="94" fill="#778" font-size="11" text-anchor="end">666</text>
+        <text x="55" y="44" fill="#778" font-size="11" text-anchor="end">1000</text>
+        <!-- bars: max=1000 → 150px height; 949→142, 698→105, 490→74 -->
+        <!-- web -->
+        <rect x="85" y="48" width="80" height="142" fill="#3b82f6" rx="4"/>
+        <text x="125" y="43" fill="#aabbff" font-size="12" text-anchor="middle" font-weight="700">949</text>
+        <text x="125" y="208" fill="#aab" font-size="12" text-anchor="middle">web</text>
+        <!-- partner -->
+        <rect x="195" y="85" width="80" height="105" fill="#8b5cf6" rx="4"/>
+        <text x="235" y="80" fill="#ccaaff" font-size="12" text-anchor="middle" font-weight="700">698</text>
+        <text x="235" y="208" fill="#aab" font-size="12" text-anchor="middle">partner</text>
+        <!-- marketplace -->
+        <rect x="305" y="116" width="80" height="74" fill="#ef4444" rx="4"/>
+        <text x="345" y="111" fill="#ffaaaa" font-size="12" text-anchor="middle" font-weight="700">490</text>
+        <text x="345" y="208" fill="#aab" font-size="12" text-anchor="middle">marketplace</text>
+      </svg>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title">RETURN RATE — CHANNEL-ENKÉNT (%)</div>
+      <svg viewBox="0 0 420 240" width="100%">
+        <line x1="60" y1="20" x2="60" y2="190" stroke="#333366" stroke-width="1"/>
+        <line x1="60" y1="190" x2="400" y2="190" stroke="#333366" stroke-width="1"/>
+        <line x1="60" y1="115" x2="400" y2="115" stroke="#222244" stroke-dasharray="4,4"/>
+        <line x1="60" y1="40" x2="400" y2="40" stroke="#222244" stroke-dasharray="4,4"/>
+        <text x="55" y="194" fill="#778" font-size="11" text-anchor="end">0%</text>
+        <text x="55" y="119" fill="#778" font-size="11" text-anchor="end">15%</text>
+        <text x="55" y="44" fill="#778" font-size="11" text-anchor="end">30%</text>
+        <!-- web: 4.3% → 150/30*4.3=21.5 -->
+        <rect x="85" y="168" width="80" height="22" fill="#10b981" rx="4"/>
+        <text x="125" y="163" fill="#66ffaa" font-size="12" text-anchor="middle" font-weight="700">4.3%</text>
+        <text x="125" y="208" fill="#aab" font-size="12" text-anchor="middle">web ✓</text>
+        <!-- partner: 7.7% → 38.5 -->
+        <rect x="195" y="151" width="80" height="39" fill="#f59e0b" rx="4"/>
+        <text x="235" y="146" fill="#ffcc66" font-size="12" text-anchor="middle" font-weight="700">7.7%</text>
+        <text x="235" y="208" fill="#aab" font-size="12" text-anchor="middle">partner</text>
+        <!-- marketplace: 28.6% → 143 -->
+        <rect x="305" y="47" width="80" height="143" fill="#ef4444" rx="4"/>
+        <text x="345" y="42" fill="#ffaaaa" font-size="12" text-anchor="middle" font-weight="700">28.6% ⚠</text>
+        <text x="345" y="208" fill="#aab" font-size="12" text-anchor="middle">marketplace</text>
+      </svg>
+    </div>
+  </div>
+
+  <h2>CHANNEL ÖSSZEHASONLÍTÁS</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel</th><th>Orders</th><th>Visszáru</th><th>Return rate</th><th>Nettó revenue</th><th>AOV</th><th>Átlag discount</th></tr></thead>
+      <tbody>
+        <tr><td><strong>web</strong></td><td>23</td><td>1</td><td><span class="badge badge-green">4.3% ✓</span></td><td>949.15</td><td>43.14</td><td>3.3%</td></tr>
+        <tr><td><strong>partner</strong></td><td>13</td><td>1</td><td><span class="badge badge-amber">7.7%</span></td><td>697.64</td><td>58.14</td><td>7.3%</td></tr>
+        <tr><td><strong>marketplace</strong></td><td>14</td><td>4</td><td><span class="badge badge-red">28.6% ⚠</span></td><td>490.05</td><td>49.01</td><td>5.7%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="issue-banner" style="border-color:#ef4444">
+    <div class="issue-label" style="color:#ef4444">⚠ MARKETPLACE-CLOTHING ANOMÁLIA</div>
+    <div class="issue-title" style="font-size:1.1rem">4 rendelésből 3 visszaküldött — elveszett revenue: <span style="color:#ef4444">169.78 egység (7.9% a teljes nettóból)</span></div>
+    <div class="issue-sub">Hipotézis: rendeléskori hiba a marketplace platformon — területi vezető bevonása szükséges</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel</th><th>Category</th><th>Orders</th><th>Teljesült</th><th>Nettó revenue</th><th>Visszáru</th><th>Súlyozott átlagár</th></tr></thead>
+      <tbody>
+        <tr style="background:#1a0a0a"><td>marketplace</td><td>Clothing</td><td>4</td><td>1</td>
+          <td><span class="badge badge-red">42.00</span></td>
+          <td><span class="badge badge-red">3 visszaküldve!</span></td>
+          <td>42.00</td></tr>
+        <tr><td>marketplace</td><td>Electronics</td><td>8</td><td>7</td><td>267.25</td><td>1</td><td>38.18</td></tr>
+        <tr><td>marketplace</td><td>Home &amp; Garden</td><td>2</td><td>2</td><td>180.80</td><td>0</td><td>90.40</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 5. HAVI TREND                                       -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="trend" class="section">
+  <h1>Havi trend</h1>
+  <p class="subtitle">Februárban 26 termék tűnt el a portfólióból — helyettük nem jelent meg egyenértékű bevételi forrás</p>
+
+  <div class="two-col">
+    <div class="chart-box">
+      <div class="chart-title">NETTÓ REVENUE — JAN vs FEB</div>
+      <svg viewBox="0 0 300 220" width="100%">
+        <line x1="50" y1="20" x2="50" y2="170" stroke="#333366" stroke-width="1"/>
+        <line x1="50" y1="170" x2="280" y2="170" stroke="#333366" stroke-width="1"/>
+        <line x1="50" y1="120" x2="280" y2="120" stroke="#222244" stroke-dasharray="4,4"/>
+        <line x1="50" y1="70" x2="280" y2="70" stroke="#222244" stroke-dasharray="4,4"/>
+        <text x="45" y="174" fill="#778" font-size="10" text-anchor="end">0</text>
+        <text x="45" y="124" fill="#778" font-size="10" text-anchor="end">750</text>
+        <text x="45" y="74" fill="#778" font-size="10" text-anchor="end">1500</text>
+        <!-- jan: 1484/1500*150=148 -->
+        <rect x="75" y="22" width="75" height="148" fill="#3b82f6" rx="4"/>
+        <text x="112" y="17" fill="#6ab4ff" font-size="11" text-anchor="middle" font-weight="700">1 484</text>
+        <text x="112" y="188" fill="#aab" font-size="11" text-anchor="middle">2024-01</text>
+        <!-- feb: 652/1500*150=65 -->
+        <rect x="170" y="105" width="75" height="65" fill="#ef4444" rx="4"/>
+        <text x="207" y="100" fill="#ffaaaa" font-size="11" text-anchor="middle" font-weight="700">652</text>
+        <text x="207" y="188" fill="#aab" font-size="11" text-anchor="middle">2024-02</text>
+        <!-- arrow -->
+        <text x="155" y="80" fill="#ef4444" font-size="18" text-anchor="middle">↓</text>
+        <text x="155" y="95" fill="#ef4444" font-size="10" text-anchor="middle">−56%</text>
+      </svg>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">HAVI ÖSSZESÍTŐ</div>
+        <table>
+          <thead><tr><th>Hónap</th><th>Orders</th><th>Nettó rev.</th><th>Napi átlag</th></tr></thead>
+          <tbody>
+            <tr><td>2024-01</td><td>31</td><td>1 484.39</td><td>54.98</td></tr>
+            <tr><td>2024-02</td><td>19</td><td>652.45</td><td>34.34</td></tr>
+            <tr style="background:#3d0010"><td><strong>Variance</strong></td><td><span style="color:#ff8899">−12</span></td><td><span style="color:#ff8899">−831.94</span></td><td><span style="color:#ff8899">−38%</span></td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:.75rem;font-size:.82rem;color:#aaffcc;line-height:1.5;background:#0a2a1a;padding:.6rem;border-radius:6px">
+          <strong>Miért napi átlag?</strong> A február csak 19 napot fed le (vs jan. 27 nap). A −38% napi átlag visszaesés időszak-korrigált — valódi jel, nem statisztikai artefaktum.
+        </p>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">CATEGORY SZINTŰ KIESÉS (JAN→FEB)</div>
+        <table>
+          <thead><tr><th>Category</th><th>Jan</th><th>Feb</th><th>Var.</th></tr></thead>
+          <tbody>
+            <tr><td>Electronics</td><td>575.29</td><td>171.33</td><td><span style="color:#ff8899">−403.96</span></td></tr>
+            <tr><td>Clothing</td><td>503.95</td><td>280.24</td><td><span style="color:#ffcc66">−223.71</span></td></tr>
+            <tr><td>Home &amp; Garden</td><td>405.15</td><td>200.88</td><td><span style="color:#ffcc66">−204.27</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <h2>CHANNEL-CATEGORY VARIANCE (csökkenő)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel | Category</th><th>2024-01</th><th>2024-02</th><th>Variance</th><th>Értékelés</th></tr></thead>
+      <tbody>
+        <tr style="background:#2a0a0a"><td>partner | Clothing</td><td>263.98</td><td>40.46</td><td><span style="color:#ff4466;font-weight:700">−223.52</span></td><td><span class="badge badge-red">kritikus</span></td></tr>
+        <tr style="background:#1a0a0a"><td>web | Electronics</td><td>219.59</td><td>18.98</td><td><span style="color:#ff6666;font-weight:700">−200.61</span></td><td><span class="badge badge-red">kritikus</span></td></tr>
+        <tr><td>web | Home &amp; Garden</td><td>197.15</td><td>75.68</td><td><span style="color:#ffaa44;font-weight:700">−121.47</span></td><td><span class="badge badge-amber">magas</span></td></tr>
+        <tr><td>marketplace | Electronics</td><td>184.48</td><td>82.77</td><td><span style="color:#ffaa44;font-weight:700">−101.71</span></td><td><span class="badge badge-amber">magas</span></td></tr>
+        <tr><td>partner | Electronics</td><td>171.22</td><td>69.58</td><td><span style="color:#ffaa44;font-weight:700">−101.64</span></td><td><span class="badge badge-amber">magas</span></td></tr>
+        <tr><td>marketplace | Home &amp; Garden</td><td>127.80</td><td>53.00</td><td><span style="color:#ffcc66">−74.80</span></td><td><span class="badge badge-amber">közepes</span></td></tr>
+        <tr><td>web | Clothing</td><td>239.97</td><td>197.78</td><td><span style="color:#ffdd88">−42.19</span></td><td><span class="badge badge-blue">alacsony</span></td></tr>
+        <tr><td>partner | Home &amp; Garden</td><td>80.20</td><td>72.20</td><td><span style="color:#ffdd88">−8.00</span></td><td><span class="badge badge-blue">stabil</span></td></tr>
+        <tr style="background:#0a2a1a"><td>marketplace | Clothing</td><td>0.00</td><td>42.00</td><td><span style="color:#66ffaa;font-weight:700">+42.00</span></td><td><span class="badge badge-green">növekedés</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>KORLÁTOK ÉS CAVEATOK</h2>
+  <ul class="checklist">
+    <li class="warn"><span class="check-icon">⚠</span><span><strong>50 sor</strong> — statisztikailag nem reprezentatív, a módszer a fontos</span></li>
+    <li class="warn"><span class="check-icon">⚠</span><span><strong>2 hónap</strong> — nem elégséges trendmegállapításhoz</span></li>
+    <li class="warn"><span class="check-icon">⚠</span><span><strong>Február csonka</strong> (19 nap) — napi átlaggal kell korrigálni</span></li>
+    <li class="warn"><span class="check-icon">⚠</span><span><strong>Árbevétel egysége ismeretlen</strong> — feltételezhetően forint</span></li>
+  </ul>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const links={'exec':0,'adat':1,'dq':2,'channel':3,'trend':4};
+  document.querySelectorAll('nav a')[links[id]].classList.add('active');
+  return false;
+}
+</script>
+</body>
+</html>
