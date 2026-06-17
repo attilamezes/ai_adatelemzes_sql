@@ -1,0 +1,10 @@
+"channel","category","orders_db","teljesult_db","netto_revenue","sulyozott_atlagár"
+marketplace,Electronics,5,8,267.25,33.41
+marketplace,Home & Garden,5,10,180.8,18.08
+marketplace,Clothing,4,3,42.0,14.0
+partner,Clothing,4,11,304.44,27.68
+partner,Electronics,6,8,240.8,30.1
+partner,Home & Garden,3,6,152.4,25.4
+web,Clothing,8,9,437.75,48.64
+web,Home & Garden,8,17,272.83,16.05
+web,Electronics,7,23,238.57,10.37

@@ -1,0 +1,5 @@
+"order_id","product_name","quantity","unit_price","discount","is_returned","revenue"
+1017,Sneakers,1,95.0,0.15,yes,80.75
+1029,Baseball Cap,3,16.5,0.05,yes,47.03
+1047,Beanie,3,14.0,0.0,no,42.0
+1050,Gloves,2,21.0,0.0,yes,42.0

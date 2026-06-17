@@ -1,0 +1,6 @@
+"order_id","customer_id","order_date","channel","category","product_name","quantity","unit_price","discount","is_returned","payment_method","revenue","dq_flag"
+1001,C001,"2024-01-05",web,Electronics,Wireless Mouse,2,25.99,0.1,no,credit_card,46.78,
+1002,C002,"2024-01-06",marketplace,Home & Garden,Desk Lamp,1,45.0,0.0,no,paypal,45.0,
+1003,C003,"2024-01-06",partner,Electronics,USB Hub,3,18.5,0.05,no,credit_card,52.73,
+1004,C004,"2024-01-07",web,Clothing,T-Shirt,1,19.99,0.0,no,bank_transfer,19.99,
+1005,C005,"2024-01-08",marketplace,Electronics,Bluetooth Speaker,1,89.99,0.15,yes,credit_card,76.49,

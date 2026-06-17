@@ -1,0 +1,3 @@
+"order_id","customer_id","dq_flag","revenue"
+1015,C999,orphan,67.5
+1045,,missing_customer,45.6

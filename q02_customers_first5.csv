@@ -1,0 +1,6 @@
+"customer_id","customer_name","city","signup_date","segment"
+C001,Kovács Anna,Budapest,"2023-03-15",returning
+C002,Nagy Péter,Debrecen,"2023-05-20",returning
+C003,Szabó Kata,Szeged,"2023-07-01",returning
+C004,Tóth László,Budapest,"2023-08-10",new
+C005,Varga Eszter,Pécs,"2023-09-22",new
